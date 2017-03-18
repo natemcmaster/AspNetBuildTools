@@ -10,15 +10,15 @@ using Newtonsoft.Json;
 
 namespace ApiCheck.IO
 {
-    public class JsonApiListingReader: IApiListingReader, IDisposable
+    public class JsonApiListingReader: IApiListingReader
     {
-        private readonly IEnumerable<Func<ApiElement, bool>> _filters;
+        private readonly IEnumerable<Predicate<ApiElement>> _filters;
         private readonly JsonReader _json;
 
-        public JsonApiListingReader(TextReader reader, IEnumerable<Func<ApiElement, bool>> filters = null)
+        public JsonApiListingReader(TextReader reader, IEnumerable<Predicate<ApiElement>> filters = null)
         {
             _json = new JsonTextReader(reader);
-            _filters = filters ?? Enumerable.Empty<Func<ApiElement, bool>>();
+            _filters = filters ?? Enumerable.Empty<Predicate<ApiElement>>();
         }
 
         public ApiListing Read()

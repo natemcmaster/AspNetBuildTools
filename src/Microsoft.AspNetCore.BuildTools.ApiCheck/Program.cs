@@ -108,7 +108,7 @@ namespace ApiCheck
                 assetsJson.Value(),
                 framework.Value());
 
-            var filters = new List<Func<MemberInfo, bool>>();
+            var filters = new List<Predicate<MemberInfo>>();
             if (excludeInternalNamespace.HasValue())
             {
                 filters.Add(ApiListingFilters.IsInInternalNamespace);
@@ -139,8 +139,8 @@ namespace ApiCheck
                 return Error;
             }
 
-            var newApiListingFilters = new List<Func<MemberInfo, bool>>();
-            var oldApiListingFilters = new List<Func<ApiElement, bool>>();
+            var newApiListingFilters = new List<Predicate<MemberInfo>>();
+            var oldApiListingFilters = new List<Predicate<ApiElement>>();
 
             if (excludeInternalNamespace.HasValue())
             {
@@ -156,12 +156,15 @@ namespace ApiCheck
                 oldApiListing = oldReader.Read();
             }
 
-            var newReader = CreateReader(
+            ApiListing newApiListing;
+            using (var reader = CreateReader(
                 assemblyPath.Value(),
                 assetsJson.Value(),
                 framework.Value(),
-                newApiListingFilters);
-            var newApiListing = newReader.Read();
+                newApiListingFilters))
+            {
+                newApiListing = reader.Read();
+            }
 
             var exclusions = !exclusionsPathOption.HasValue() ?
                 Enumerable.Empty<ApiChangeExclusion>() :
@@ -205,7 +208,7 @@ namespace ApiCheck
             return Ok;
         }
 
-        private static ReflectionApiListingReader CreateReader(string assemblyPath, string assetsJson, string framework, List<Func<MemberInfo, bool>> newApiListingFilters)
+        private static ReflectionApiListingReader CreateReader(string assemblyPath, string assetsJson, string framework, List<Predicate<MemberInfo>> newApiListingFilters)
         {
             var assembly = AssemblyLoader.LoadAssembly(assemblyPath, assetsJson, framework);
             return new ReflectionApiListingReader(assembly, newApiListingFilters);

@@ -15,7 +15,7 @@ namespace ApiCheck.Test
         public Assembly V1Assembly => typeof(ApiCheckApiListingV1).GetTypeInfo().Assembly;
         public Assembly V2Assembly => typeof(ApiCheckApiListingV2).GetTypeInfo().Assembly;
 
-        public IEnumerable<Func<MemberInfo, bool>> TestFilters => new Func<MemberInfo, bool>[]
+        public IEnumerable<Predicate<MemberInfo>> TestFilters => new Predicate<MemberInfo>[]
         {
             ti => ti is TypeInfo && !((TypeInfo)ti).Namespace.StartsWith("ComparisonScenarios")
         };
@@ -238,9 +238,9 @@ namespace ApiCheck.Test
             Assert.Single(changes.BreakingChanges, bc => bc.Item.Id == "public interface ComparisonScenarios.IInterfaceWithSameNumberOfRemovedAndAddedMembers");
         }
 
-        private ApiListing CreateApiListingDocument(Assembly assembly, IEnumerable<Func<MemberInfo, bool>> additionalFilters = null)
+        private ApiListing CreateApiListingDocument(Assembly assembly, IEnumerable<Predicate<MemberInfo>> additionalFilters = null)
         {
-            additionalFilters = additionalFilters ?? Enumerable.Empty<Func<MemberInfo, bool>>();
+            additionalFilters = additionalFilters ?? Enumerable.Empty<Predicate<MemberInfo>>();
             var generator = new ReflectionApiListingReader(assembly, TestFilters.Concat(additionalFilters));
 
             return generator.Read();

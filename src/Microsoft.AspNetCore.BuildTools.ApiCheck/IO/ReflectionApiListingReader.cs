@@ -19,12 +19,12 @@ namespace ApiCheck.IO
             BindingFlags.DeclaredOnly;
 
         private readonly Assembly _assembly;
-        private readonly IEnumerable<Func<MemberInfo, bool>> _filters;
+        private readonly IEnumerable<Predicate<MemberInfo>> _filters;
 
-        public ReflectionApiListingReader(Assembly assembly, IEnumerable<Func<MemberInfo, bool>> filters)
+        public ReflectionApiListingReader(Assembly assembly, IEnumerable<Predicate<MemberInfo>> filters)
         {
             _assembly = assembly;
-            _filters = filters ?? Enumerable.Empty<Func<MemberInfo, bool>>();
+            _filters = filters ?? Enumerable.Empty<Predicate<MemberInfo>>();
         }
 
         public ApiListing Read()
@@ -45,9 +45,9 @@ namespace ApiCheck.IO
             return document;
         }
 
-        public static TypeDescriptor GenerateTypeDescriptor(TypeInfo type, IEnumerable<Func<MemberInfo, bool>> filters = null)
+        public static TypeDescriptor GenerateTypeDescriptor(TypeInfo type, IEnumerable<Predicate<MemberInfo>> filters = null)
         {
-            filters = filters ?? Enumerable.Empty<Func<MemberInfo, bool>>();
+            filters = filters ?? Enumerable.Empty<Predicate<MemberInfo>>();
             var generator = new ReflectionApiListingReader(type.Assembly, filters);
             return generator.GenerateTypeDescriptor(type);
         }
@@ -426,6 +426,10 @@ namespace ApiCheck.IO
             }
 
             throw new InvalidOperationException("Unsupported default value type");
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

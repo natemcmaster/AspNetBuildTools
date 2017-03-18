@@ -20,13 +20,16 @@ namespace ApiCheck.IO
   ]
 }";
 
-            // Act
-            var report = new JsonApiListingReader(new StringReader(serialized), new Func<ApiElement, bool>[] { ApiListingFilters.IsInInternalNamespace }).Read();
+            using (var reader = new JsonApiListingReader(new StringReader(serialized), new Predicate<ApiElement>[] { ApiListingFilters.IsInInternalNamespace }))
+            {
+                // Act
+                var report = reader.Read();
 
-            // Assert
-            Assert.NotNull(report);
-            Assert.NotNull(report.Types);
-            Assert.Empty(report.Types);
+                // Assert
+                Assert.NotNull(report);
+                Assert.NotNull(report.Types);
+                Assert.Empty(report.Types);
+            }
         }
     }
 }

@@ -1228,9 +1228,9 @@ namespace ApiCheck.Test
             Assert.DoesNotContain(report.Types, type => type.Name == "Scenarios.Internal.ExcludedType");
         }
 
-        private ReflectionApiListingReader CreateReader(Assembly assembly, params Func<MemberInfo, bool>[] filters)
+        private ReflectionApiListingReader CreateReader(Assembly assembly, params Predicate<MemberInfo>[] filters)
         {
-            filters = filters ?? new Func<MemberInfo, bool>[] { };
+            filters = filters ?? new Predicate<MemberInfo>[] { };
             return new ReflectionApiListingReader(assembly, filters);
         }
     }

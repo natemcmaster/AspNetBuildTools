@@ -16,7 +16,7 @@ namespace ApiCheck.Description
         public IList<TypeDescriptor> Types { get; } = new List<TypeDescriptor>();
 
         [JsonIgnore]
-        public IEnumerable<Func<MemberInfo, bool>> SourceFilters { get; set; }
+        public IEnumerable<Predicate<MemberInfo>> SourceFilters { get; set; }
 
         public TypeDescriptor FindType(string name)
         {
