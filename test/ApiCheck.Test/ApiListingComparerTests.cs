@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ApiCheck.Description;
+using ApiCheck.IO;
 using ApiCheckApiListing.V2;
 using Scenarios;
 using Xunit;
@@ -408,9 +409,9 @@ namespace ApiCheck.Test
 
         private ApiListing CreateApiListingDocument(Assembly assembly)
         {
-            var generator = new ApiListingGenerator(assembly, TestFilters);
+            var generator = new ReflectionApiListingReader(assembly, TestFilters);
 
-            return generator.GenerateApiListing();
+            return generator.Read();
         }
     }
 }

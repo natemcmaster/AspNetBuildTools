@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using ApiCheck.Description;
+using ApiCheck.IO;
 using Microsoft.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 
@@ -160,15 +161,9 @@ namespace ApiCheck
                 filters.Add(ApiListingFilters.IsInInternalNamespace);
             }
 
-            var report = ApiListingGenerator.GenerateApiListingReport(assembly, filters);
-            using (var writer = new JsonTextWriter(File.CreateText(output.Value())))
-            {
-                writer.Formatting = Formatting.Indented;
-                writer.Indentation = 2;
-                writer.IndentChar = ' ';
-
-                report.WriteTo(writer);
-            }
+            var writer = new JsonApiListingWriter(output.Value());
+            var reader = new ReflectionApiListingReader(assembly, filters);
+            writer.Write(reader.Read());
 
             return Ok;
         }
@@ -191,11 +186,6 @@ namespace ApiCheck
                 return Error;
             }
 
-            var assembly = AssemblyLoader.LoadAssembly(
-                assemblyPath.Value(),
-                assetsJson.Value(),
-                framework.Value());
-
             var newApiListingFilters = new List<Func<MemberInfo, bool>>();
             var oldApiListingFilters = new List<Func<ApiElement, bool>>();
 
@@ -205,11 +195,24 @@ namespace ApiCheck
                 oldApiListingFilters.Add(ApiListingFilters.IsInInternalNamespace);
             }
 
-            var oldApiListing = ApiListingGenerator.LoadFrom(File.ReadAllText(apiListingPathOption.Value()),
-                oldApiListingFilters);
+            ApiListing oldApiListing;
+            using (var file = new FileStream(apiListingPathOption.Value(), FileMode.Open))
+            using (var reader = new StreamReader(file))
+            using (var oldReader = new JsonApiListingReader(reader, oldApiListingFilters))
+            {
+                oldApiListing = oldReader.Read();
+            }
 
-            var generator = new ApiListingGenerator(assembly, newApiListingFilters);
-            var newApiListing = generator.GenerateApiListing();
+            ApiListing newApiListing;
+            using (var reader = CreateReader(
+                assemblyPath.Value(),
+                assetsJson.Value(),
+                framework.Value(),
+                newApiListingFilters))
+            {
+                newApiListing = reader.Read();
+            }
+
             var knownBreakingChanges = (breakingChangesPathOption.HasValue()
                                            ? JsonConvert.DeserializeObject<IList<BreakingChange>>(
                                                File.ReadAllText(breakingChangesPathOption.Value()))
@@ -324,6 +327,12 @@ namespace ApiCheck
             }
 
             return Ok;
+        }
+
+        private static ReflectionApiListingReader CreateReader(string assemblyPath, string assetsJson, string framework, List<Func<MemberInfo, bool>> newApiListingFilters)
+        {
+            var assembly = AssemblyLoader.LoadAssembly(assemblyPath, assetsJson, framework);
+            return new ReflectionApiListingReader(assembly, newApiListingFilters);
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ApiCheck.Description;
+using ApiCheck.IO;
 
 namespace ApiCheck
 {
@@ -116,16 +117,12 @@ namespace ApiCheck
                     }
                 }
 
-                candidate = candidate.BaseType == null ? null : FindOrGenerateDescriptorForBaseType(candidate);
+                candidate = candidate.BaseType == null
+                    ? null
+                    : _newApiListing.FindType(candidate.BaseType);
             }
 
             return acceptable;
-        }
-
-        private TypeDescriptor FindOrGenerateDescriptorForBaseType(TypeDescriptor candidate)
-        {
-            return _newApiListing.FindType(candidate.BaseType) ??
-                ApiListingGenerator.GenerateTypeDescriptor(candidate.Source.BaseType.GetTypeInfo(), _newApiListing.SourceFilters);
         }
 
         private bool SameSignature(MemberDescriptor original, MemberDescriptor candidate)
@@ -263,18 +260,16 @@ namespace ApiCheck
         private bool HasCompatibleSetOfInterfaces(TypeDescriptor oldType, TypeDescriptor newType)
         {
             // An interface can't require new implemented interfaces unless they are marker interfaces (they don't have any member)
-            var newInterfaces = newType.Source.ImplementedInterfaces
-                .Where(i => !oldType.ImplementedInterfaces.Contains(TypeDescriptor.GetTypeNameFor(i.GetTypeInfo())));
-
-            return newInterfaces.All(ni => ni.GetTypeInfo().GetMembers().Length == 0);
+            return newType.ImplementedInterfaces
+                .Where(i => !oldType.ImplementedInterfaces.Contains(i))
+                .Select(name => _newApiListing.Types.FirstOrDefault(t => t.Name == name))
+                .All(t => t?.Members?.Count == 0);
         }
 
         private bool ImplementsAllInterfaces(TypeDescriptor oldType, TypeDescriptor newType)
         {
-            var oldInterfaces = oldType.ImplementedInterfaces;
-            var newInterfaces = newType.Source.ImplementedInterfaces.Select(i => TypeDescriptor.GetTypeNameFor(i.GetTypeInfo()));
-
-            return oldInterfaces.All(oi => newInterfaces.Contains(oi));
+            var newInterfaces = newType.ImplementedInterfaces;
+            return oldType.ImplementedInterfaces.All(oi => newInterfaces.Contains(oi));
         }
 
         private bool HasCompatibleVisibility(TypeDescriptor oldType, TypeDescriptor newType)

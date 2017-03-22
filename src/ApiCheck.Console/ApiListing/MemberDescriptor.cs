@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
@@ -13,9 +13,6 @@ namespace ApiCheck.Description
     {
         [JsonIgnore]
         public override string Id => string.Join(" ", GetComponents());
-
-        [JsonIgnore]
-        public MemberInfo Source { get; set; }
 
         public MemberKind Kind { get; set; }
 
@@ -176,18 +173,6 @@ namespace ApiCheck.Description
 
             builder.Append(")");
             return builder.ToString();
-        }
-
-        public static string GetMemberNameFor(MethodBase member, bool includeGenericParameters = true)
-        {
-            if (!member.IsGenericMethod || !includeGenericParameters)
-            {
-                return member.Name;
-            }
-
-            var genericParameters = string.Join(", ", member.GetGenericArguments().Select(ga => TypeDescriptor.GetTypeNameFor(ga.GetTypeInfo())));
-
-            return $"{member.Name}<{genericParameters}>";
         }
     }
 }
