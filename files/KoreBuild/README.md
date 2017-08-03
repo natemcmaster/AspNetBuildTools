@@ -12,5 +12,7 @@ File/Folder                 | Purpose
 KoreBuild.psd1              | PowerShell module for executing korebuild.
 KoreBuild.sh                | Bash module for executing korebuild. (Should be `source`'d).
 config/                     | Contains configuration data.
-scripts/                    | Bash/PowerShell scripts
 modules/                    | Extensions to the KoreBuild lifecycle.
+scripts/                    | Bash/PowerShell scripts
+sdk/                        | MSBuild SDKs
+tools/                      | Additional tools such as console apps and MSBuild extensions.

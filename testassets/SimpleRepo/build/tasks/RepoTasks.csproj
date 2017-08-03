@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(RepoTasksSdkPath)\Sdk.props" Condition="'$(RepoTasksSdkPath)' != '' "/>
+<Project>
+  <Sdk Name="Microsoft.NET.Sdk" />
+  <Sdk Name="KoreBuild.RepoTasks.Sdk" />
 
   <PropertyGroup>
     <!-- still required to keep VS happy -->
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
-  <Import Project="$(RepoTasksSdkPath)\Sdk.targets" Condition="'$(RepoTasksSdkPath)' != '' "/>
 </Project>

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\build\dependencies.props" />
+
+  <PropertyGroup>
+    <!-- Manually change this anytime you update the resolver so the build scripts can invalidate the assembly. -->
+    <Version>1.0.0</Version>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildVersion)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="GenVersionFile" AfterTargets="Publish">
+    <WriteLinesToFile Lines="$(Version)" File="$(PublishDir)\version.txt" Overwrite="True" />
+  </Target>
+
+  <!-- Microsoft.NET.Sdk publishes files we don't need for .NET Framework -->
+  <Target Name="CleanupPublish" AfterTargets="Publish" Condition="'$(TargetFramework)' == 'net46'">
+    <ItemGroup>
+      <DupFiles Include="$(PublishDir)\Microsoft.Build.*.dll" />
+      <DupFiles Include="$(PublishDir)\System.*.dll" />
+    </ItemGroup>
+    <Delete Files="@(DupFiles)" />
+  </Target>
+
+</Project>

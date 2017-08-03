@@ -38,6 +38,9 @@
 
     <ItemGroup>
       <Content Include="$(RepositoryRoot)files\KoreBuild\**\*" />
+
+      <VersionFileLines Remove="@(VersionFileLines)" />
+      <VersionFileLines Include="schema:1" />
       <VersionFileLines Include="version:$(Version)" />
       <VersionFileLines Include="commithash:$(CommitHash)" />
     </ItemGroup>
@@ -48,13 +51,22 @@
     <WriteLinesToFile File="$(_KoreBuildIntermediateDir).version" Lines="@(VersionFileLines)" Overwrite="true" />
 
     <ItemGroup>
-      <_ModuleProjects Include="$(RepositoryRoot)modules\%(KoreBuildModule.Identity)\%(Identity).*proj">
-        <AdditionalProperties>PublishDir=$(_KoreBuildIntermediateDir)modules\%(Identity)\</AdditionalProperties>
-      </_ModuleProjects>
+      <_PublishProjects Include="$(RepositoryRoot)modules\%(KoreBuildModule.Identity)\%(KoreBuildModule.Identity).*proj">
+        <AdditionalProperties>PublishDir=$(_KoreBuildIntermediateDir)modules\%(KoreBuildModule.Identity)\</AdditionalProperties>
+      </_PublishProjects>
+      <_PublishProjects Include="$(RepositoryRoot)tools\%(KoreBuildTool.Identity)\%(KoreBuildTool.Identity).*proj" Condition="'%(KoreBuildTool.TargetFramework)' == ''">
+        <AdditionalProperties>PublishDir=$(_KoreBuildIntermediateDir)tools\%(KoreBuildTool.Identity)\</AdditionalProperties>
+      </_PublishProjects>
+      <_PublishProjects Include="$(RepositoryRoot)tools\%(KoreBuildTool.Identity)\%(KoreBuildTool.Identity).*proj" Condition="'%(KoreBuildTool.TargetFramework)' != ''">
+        <AdditionalProperties>PublishDir=$(_KoreBuildIntermediateDir)tools\%(KoreBuildTool.Identity)\%(KoreBuildTool.TargetFramework)\;TargetFramework=%(KoreBuildTool.TargetFramework)</AdditionalProperties>
+      </_PublishProjects>
+      <_PublishProjects Include="$(RepositoryRoot)sdks\%(KoreBuildSdk.Identity)\%(KoreBuildSdk.Identity).*proj">
+        <AdditionalProperties>PublishDir=$(_KoreBuildIntermediateDir)sdks\%(KoreBuildSdk.Identity)\</AdditionalProperties>
+      </_PublishProjects>
     </ItemGroup>
 
     <MSBuild Targets="Publish"
-      Projects="@(_ModuleProjects)"
+      Projects="@(_PublishProjects)"
       Properties="$(SolutionProperties)" />
 
     <ItemGroup>

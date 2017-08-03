@@ -14,6 +14,8 @@ artifacts
 StyleCop.Cache
 node_modules
 *.snk
+*.log
+*.binlog
 .nuget/NuGet.exe
 project.lock.json
 .build

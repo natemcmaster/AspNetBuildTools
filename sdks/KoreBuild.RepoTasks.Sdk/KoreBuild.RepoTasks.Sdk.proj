@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <Content Include="Sdk.props" />
+    <Content Include="Sdk.targets" />
+  </ItemGroup>
+
+  <Target Name="Publish">
+    <Copy SourceFiles="@(Content)" DestinationFolder="$(PublishDir)" />
+  </Target>
+</Project>

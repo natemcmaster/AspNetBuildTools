@@ -2,8 +2,6 @@
 #requires -version 4
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [Alias('p')]
-    [string]$Path = $PSScriptRoot,
     [Alias('d')]
     [string]$DotNetHome = $(`
             if ($env:DOTNET_HOME) { $env:DOTNET_HOME } `
@@ -21,7 +19,7 @@ $ErrorActionPreference = 'Stop'
 try {
     Import-Module -Force -Scope Local $PSScriptRoot/files/KoreBuild/KoreBuild.psd1
     Install-Tools $ToolsSource $DotNetHome
-    Invoke-RepositoryBuild $Path @MSBuildArgs
+    Invoke-RepositoryBuild $PSScriptRoot @MSBuildArgs
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore

@@ -46,6 +46,12 @@ function Invoke-RepositoryBuild(
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
     }
 
+    if (($MSBuildArgs.Length -gt 0) -and ($MSBuildArgs[0] -eq 'init-vs')) {
+        $installVsScript = Join-Path $PSScriptRoot 'InstallVsTools.ps1'
+        __exec $installVsScript
+        return
+    }
+
     $Path = Resolve-Path $Path
     Push-Location $Path | Out-Null
     try {
@@ -56,7 +62,8 @@ function Invoke-RepositoryBuild(
         $sdkVersion = __get_dotnet_sdk_version
         if ($sdkVersion -ne 'latest') {
             "{ `"sdk`": { `"version`": `"$sdkVersion`" } }" | Out-File (Join-Path $Path 'global.json') -Encoding ascii
-        } else {
+        }
+        else {
             Write-Verbose "Skipping global.json generation because the `$sdkVersion = $sdkVersion"
         }
 
@@ -199,7 +206,8 @@ function Install-Tools(
     }
 
     # Install the main CLI
-    if (!(Test-Path (Join-Paths $installDir ('sdk', $version, 'dotnet.dll')))) {
+    $sdkBasePath = Join-Paths $installDir ('sdk', $version)
+    if (!(Test-Path (Join-Path $sdkBasePath 'dotnet.dll'))) {
         Write-Verbose "Installing dotnet $version to $installDir"
         & $scriptPath `
             -Channel $channel `
@@ -210,6 +218,25 @@ function Install-Tools(
     else {
         Write-Host -ForegroundColor DarkGray ".NET Core SDK $version is already installed. Skipping installation."
     }
+
+    try {
+        $resolverFiles = Join-Paths $PSScriptRoot ('..', 'tools', 'KoreBuild.SdkResolver', 'netstandard2.0')
+        if (Test-Path $resolverFiles)
+        {
+            Write-Verbose "Installing the resolver into .NET Core SDK $version"
+            __install_sdk_resolver $sdkBasePath $resolverFiles
+        }
+    } catch {
+        Write-Warning "Failed to install the KoreBuild SDK resolver."
+    }
+}
+
+function Install-VsTools([switch]$Force) {
+    $ErrorActionPreference = 'Stop'
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
 }
 
 <#
@@ -362,6 +389,24 @@ function __install_shared_runtime($installScript, $installDir, [string]$arch, [s
     }
 }
 
+function __install_sdk_resolver([string]$MSBuildToolsFolder, [string]$ResolverPath, [switch]$Force) {
+    $dest = Join-Paths $MSBuildToolsFolder ('SdkResolvers', 'KoreBuild.SdkResolver')
+
+    # updates to this should be rare. But in the event it needs to change, we should invalidate the resolver with this file
+    $bundledResolverVersion = Get-Content (Join-Path $ResolverPath 'version.txt')
+    $installedResolverVersion = Get-Content (Join-Path $dest 'version.txt') -ErrorAction Ignore
+
+    if ($Force -or ($installedResolverVersion -ne $bundledResolverVersion)) {
+        Write-Verbose "Installing KoreBuild SDK resolver $bundledResolverVersion into $MSBuildToolsFolder"
+        New-Item -ItemType Directory $dest -ErrorAction Ignore | Out-Null
+        Copy-Item -Recurse -Force (Join-Path $ResolverPath '*') $dest
+        return $true
+    } else {
+        Write-Verbose "Skipping installing the KoreBuild SDK resolver because the version has not changed"
+    }
+    return $false
+}
+
 function __get_dotnet_sdk_version {
     if ($env:KOREBUILD_DOTNET_VERSION) {
         return $env:KOREBUILD_DOTNET_VERSION
@@ -398,7 +443,8 @@ function __build_task_project($RepoPath) {
         Remove-Item $publishFolder -Recurse -Force
     }
 
-    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', 'msbuild', 'KoreBuild.RepoTasks.Sdk', 'Sdk'))"
+    # TODO remove this once we upgrade all repos
+    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', 'sdks', 'KoreBuild.RepoTasks.Sdk'))\"
 
     __exec $global:dotnet restore $taskProj $sdkPath
     __exec $global:dotnet publish $taskProj --configuration Release --output $publishFolder /nologo $sdkPath

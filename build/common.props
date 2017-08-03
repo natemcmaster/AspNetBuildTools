@@ -1,4 +1,4 @@
-<Project>
+<Project InitialTargets="EnsureKoreBuild">
   <Import Project="dependencies.props" />
   <Import Project="..\version.xml" />
 
@@ -23,5 +23,10 @@
     <RepositoryType>git</RepositoryType>
     <VersionSuffix Condition="'$(VersionSuffix)' != '' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
   </PropertyGroup>
+
+  <Target Name="EnsureKoreBuild">
+    <Error Text="The KoreBuild SDK resolver is not installed. Close VS, run 'build.cmd init-vs', and re-open."
+           Condition="!Exists('$(MSBuildToolsPath)\SdkResolvers\KoreBuild.SdkResolver\KoreBuild.SdkResolver.dll')" />
+  </Target>
 
 </Project>

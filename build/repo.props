@@ -15,5 +15,10 @@
     <KoreBuildModule Include="NuGetPackageVerifier" />
     <KoreBuildModule Include="NuGet.Tasks" />
     <KoreBuildModule Include="BuildTools.Tasks" />
+
+    <KoreBuildTool Include="KoreBuild.SdkResolver" TargetFramework="netstandard2.0" />
+    <KoreBuildTool Include="KoreBuild.SdkResolver" TargetFramework="net46" />
+
+    <KoreBuildSdk Include="KoreBuild.RepoTasks.Sdk" />
   </ItemGroup>
 </Project>

@@ -94,3 +94,13 @@ if [ ! -f "$install_dir/sdk/$version/dotnet.dll" ]; then
 else
     echo -e "${GRAY}.NET Core SDK $version is already installed. Skipping installation.${RESET}"
 fi
+
+if [ "${KOREBUILD_SKIP_SDK_RESOLVER_INSTALL:-}" != 'true' ]; then
+    resolvers_dir="$install_dir/sdk/$version/SdkResolvers/KoreBuild.SdkResolver"
+
+    if [ ! -d "$resolvers_dir"]; then
+        __verbose "Installing KoreBuild SDK resolver into .NET Core SDK $version"
+        mkdir -p "$resolvers_dir"
+        cp -R "$__script_dir/tools/KoreBuild.SdkResolver/netstandard2.0/" "$resolvers_dir"
+    fi
+fi

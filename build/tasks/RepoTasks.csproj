@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="$(RepoTasksSdkPath)\Sdk.props" Condition="'$(RepoTasksSdkPath)' != '' "/>
+<Project>
+  <Sdk Name="Microsoft.NET.Sdk" />
+  <Import Project="..\..\sdks\KoreBuild.RepoTasks.Sdk\Sdk.props" />
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -14,6 +14,5 @@
     <Compile Include="..\..\modules\BuildTools.Tasks\ZipArchive.cs" />
   </ItemGroup>
 
-  <Import Project="$(RepoTasksSdkPath)\Sdk.targets" Condition="'$(RepoTasksSdkPath)' != '' "/>
-
+  <Import Project="..\..\sdks\KoreBuild.RepoTasks.Sdk\Sdk.targets" />
 </Project>
