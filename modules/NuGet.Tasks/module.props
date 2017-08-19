@@ -1,4 +1,5 @@
 <Project>
+  <UsingTask TaskName="NuGet.Tasks.VSTestInParallel" AssemblyFile="$(MSBuildThisFileDirectory)Internal.AspNetCore.NuGet.Tasks.dll" />
   <UsingTask TaskName="NuGet.Tasks.ApplyNuGetPolicies" AssemblyFile="$(MSBuildThisFileDirectory)Internal.AspNetCore.NuGet.Tasks.dll" />
   <UsingTask TaskName="NuGet.Tasks.PackNuSpec" AssemblyFile="$(MSBuildThisFileDirectory)Internal.AspNetCore.NuGet.Tasks.dll" />
   <UsingTask TaskName="NuGet.Tasks.PushNuGetPackages" AssemblyFile="$(MSBuildThisFileDirectory)Internal.AspNetCore.NuGet.Tasks.dll" />

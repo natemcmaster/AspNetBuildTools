@@ -10,17 +10,27 @@ namespace NuGet.Tasks.ProjectModel
 {
     internal class ProjectFrameworkInfo
     {
-        public ProjectFrameworkInfo(NuGetFramework targetFramework, IEnumerable<PackageReferenceInfo> dependencies)
-            : this(targetFramework, dependencies.ToDictionary(i => i.Id, i => i, StringComparer.OrdinalIgnoreCase))
+        public ProjectFrameworkInfo(
+            string buildTargetPath,
+            NuGetFramework targetFramework,
+            IEnumerable<PackageReferenceInfo> dependencies)
+            : this(buildTargetPath, targetFramework, dependencies.ToDictionary(i => i.Id, i => i, StringComparer.OrdinalIgnoreCase))
         { }
 
-        public ProjectFrameworkInfo(NuGetFramework targetFramework, IReadOnlyDictionary<string, PackageReferenceInfo> dependencies)
+        public ProjectFrameworkInfo(
+            string buildTargetPath,
+            NuGetFramework targetFramework,
+            IReadOnlyDictionary<string, PackageReferenceInfo> dependencies)
         {
             TargetFramework = targetFramework ?? throw new ArgumentNullException(nameof(targetFramework));
             Dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
+            BuildTargetPath = buildTargetPath ?? throw new System.ArgumentNullException(nameof(buildTargetPath));
         }
 
+        public string BuildTargetPath { get; }
+
         public NuGetFramework TargetFramework { get; }
+
         public IReadOnlyDictionary<string, PackageReferenceInfo> Dependencies { get; }
     }
 }

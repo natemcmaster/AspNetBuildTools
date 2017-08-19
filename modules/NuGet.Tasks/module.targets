@@ -2,11 +2,27 @@
 
   <PropertyGroup>
     <RestoreDependsOn>ApplyNuGetPolicies;$(RestoreDependsOn)</RestoreDependsOn>
+    <TestDependsOn Condition="'$(NoParallelTests)' != 'true'">$(TestDependsOn);TestProjectsInParallel</TestDependsOn>
     <ApplyNuGetPoliciesDependsOn>
       $(ApplyNuGetPoliciesDependsOn);
       ResolveSolutions;
     </ApplyNuGetPoliciesDependsOn>
+    <CoreTestDependsOn>
+      ResolveSolutions;
+    </CoreTestDependsOn>
+    <CoreTestDependsOn Condition="'$(NoBuild)' != 'true'">
+      $(CoreTestDependsOn)
+      BuildSolutions;
+    </CoreTestDependsOn>
   </PropertyGroup>
+
+  <Target Name="TestProjectsInParallel" DependsOnTargets="$(CoreTestDependsOn)">
+    <RemoveDuplicates Inputs="@(ProjectsToTest)">
+      <Output TaskParameter="Filtered" ItemName="_TestProjectItems" />
+    </RemoveDuplicates>
+
+    <VSTestInParallel Projects="@(_TestProjectItems)" ProjectProperties="$(SolutionProperties)" />
+  </Target>
 
   <ItemGroup Condition="@(PackageLineup->Count()) != 0 AND '$(RestrictVersionOnPackageReference)' != 'false' ">
     <!-- Automatically warn about package reference's that have a non-empty version, but only when lineups are used. -->

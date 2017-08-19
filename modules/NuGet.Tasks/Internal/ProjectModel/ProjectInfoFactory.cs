@@ -43,7 +43,7 @@ namespace NuGet.Tasks.ProjectModel
                     project.SetGlobalProperty("TargetFramework", tfm);
                     var innerBuild = project.CreateProjectInstance(ProjectInstanceSettings.ImmutableWithFastItemLookup);
 
-                    var tfmInfo = new ProjectFrameworkInfo(NuGetFramework.Parse(tfm), GetDependencies(innerBuild));
+                    var tfmInfo = new ProjectFrameworkInfo(GetTargetOutputPath(innerBuild), NuGetFramework.Parse(tfm), GetDependencies(innerBuild));
 
                     frameworks.Add(tfmInfo);
                 }
@@ -52,12 +52,10 @@ namespace NuGet.Tasks.ProjectModel
             }
             else if (!string.IsNullOrEmpty(targetFramework))
             {
-                var tfmInfo = new ProjectFrameworkInfo(NuGetFramework.Parse(targetFramework), GetDependencies(instance));
+                var tfmInfo = new ProjectFrameworkInfo(GetTargetOutputPath(instance), NuGetFramework.Parse(targetFramework), GetDependencies(instance));
 
                 frameworks.Add(tfmInfo);
             }
-
-            var projectDir = Path.GetDirectoryName(path);
 
             var tools = GetTools(instance).ToArray();
 
@@ -76,6 +74,11 @@ namespace NuGet.Tasks.ProjectModel
 
                 return new PackageReferenceInfo(item.EvaluatedInclude, item.GetMetadataValue("Version"), isImplicit, noWarnItems);
             });
+        }
+
+        private static string GetTargetOutputPath(ProjectInstance project)
+        {
+            return project.GetPropertyValue("TargetPath");
         }
 
         private static IEnumerable<DotNetCliReferenceInfo> GetTools(ProjectInstance project)

@@ -18,7 +18,7 @@ Runs the VSTest on all projects in the ProjectsToTest itemgroup.
 ###################################################################
 -->
   <PropertyGroup>
-    <TestDependsOn>$(TestDependsOn);TestProjects</TestDependsOn>
+    <TestDependsOn Condition="'$(NoParallelTests)' == 'true'">$(TestDependsOn);TestProjects</TestDependsOn>
     <VSTestLogger Condition=" '$(VSTestLogger)' == '' AND '$(TEAMCITY_VERSION)' != '' ">trx</VSTestLogger>
     <VSTestAutoReporters Condition=" '$(VSTestAutoReporters)' == '' AND '$(VSTestLogger)' != '' ">false</VSTestAutoReporters>
     <VSTestAutoReporters Condition=" '$(VSTestAutoReporters)' == '' ">true</VSTestAutoReporters>
