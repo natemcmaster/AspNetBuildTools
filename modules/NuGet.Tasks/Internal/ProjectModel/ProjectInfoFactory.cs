@@ -17,17 +17,7 @@ namespace NuGet.Tasks.ProjectModel
     {
         public static ProjectInfo Create(string path)
         {
-            var xml = ProjectRootElement.Open(path, ProjectCollection.GlobalProjectCollection);
-            var globalProps = new Dictionary<string, string>()
-            {
-                ["DesignTimeBuild"] = "true",
-                ["PolicyDesignTimeBuild"] = "true",
-            };
-
-            var project = new Project(xml, globalProps, toolsVersion: null, projectCollection: ProjectCollection.GlobalProjectCollection)
-            {
-                IsBuildEnabled = false
-            };
+            var project = GetProject(path);
             var instance = project.CreateProjectInstance(ProjectInstanceSettings.ImmutableWithFastItemLookup);
             var projExtPath = instance.GetPropertyValue("MSBuildProjectExtensionsPath");
 
@@ -60,6 +50,32 @@ namespace NuGet.Tasks.ProjectModel
             var tools = GetTools(instance).ToArray();
 
             return new ProjectInfo(path, projExtPath, frameworks, tools);
+        }
+
+        private static Project GetProject(string path)
+        {
+            var projects = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(path);
+            foreach(var proj in projects)
+            {
+                if (proj.GetPropertyValue("PolicyDesignTimeBuild") == "true")
+                {
+                    return proj;
+                }
+            }
+
+            var xml = ProjectRootElement.Open(path, ProjectCollection.GlobalProjectCollection);
+            var globalProps = new Dictionary<string, string>()
+            {
+                ["DesignTimeBuild"] = "true",
+                ["PolicyDesignTimeBuild"] = "true",
+            };
+
+            var project = new Project(xml, globalProps, toolsVersion: "15.0", projectCollection: ProjectCollection.GlobalProjectCollection)
+            {
+                IsBuildEnabled = false
+            };
+
+            return project;
         }
 
         private static IEnumerable<PackageReferenceInfo> GetDependencies(ProjectInstance project)

@@ -72,10 +72,11 @@ namespace NuGet.Tasks
                     continue;
                 }
 
+                var tfm = group.Key.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance);
                 var args = new List<string>
                 {
                     "vstest",
-                    "--Framework:" + group.Key.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance),
+                    "--Framework:" + tfm,
                     "--Parallel",
                 };
 
@@ -89,6 +90,7 @@ namespace NuGet.Tasks
                 var list = string.Join(sep, args);
                 var dotnet = DotNetMuxer.MuxerPathOrDefault();
 
+                Log.LogMessage(MessageImportance.High, $"Testing {tfm}...");
                 Log.LogMessage(MessageImportance.Normal, $"Test args: {sep}{dotnet}{sep}{list}");
 
                 var process = new Process

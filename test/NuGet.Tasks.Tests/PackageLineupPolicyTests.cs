@@ -100,8 +100,8 @@ namespace NuGet.Tasks.Tests
                 new PackageReferenceInfo("xunit", "2.2.0", false, Array.Empty<string>()),
             };
 
-            var framework = new[] { new ProjectFrameworkInfo(FrameworkConstants.CommonFrameworks.NetCoreApp20, packageRef) };
             var projectDir = AppContext.BaseDirectory;
+            var framework = new[] { new ProjectFrameworkInfo(Path.Combine(projectDir, "bin", "Test.dll"), FrameworkConstants.CommonFrameworks.NetCoreApp20, packageRef) };
             var project = new ProjectInfo(Path.Combine(projectDir, "Test.csproj"), null, framework, Array.Empty<DotNetCliReferenceInfo>());
 
             var context = new PolicyContext
@@ -155,7 +155,7 @@ namespace NuGet.Tasks.Tests
                         Path.Combine(_tempDir, "sample.csproj"), null,
                         new[]
                         {
-                            new ProjectFrameworkInfo(FrameworkConstants.CommonFrameworks.NetCoreApp20, new[]
+                            new ProjectFrameworkInfo(Path.Combine(_tempDir, "bin", "test.dll"), FrameworkConstants.CommonFrameworks.NetCoreApp20, new[]
                             {
                                 new PackageReferenceInfo("TestBundledPkg", string.Empty, false, Array.Empty<string>()),
                                 new PackageReferenceInfo("AnotherBundledPkg", "1.0.0", false, Array.Empty<string>())
