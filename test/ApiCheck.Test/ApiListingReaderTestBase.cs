@@ -1,17 +1,22 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
 using System;
-using System.Linq;
 using System.Reflection;
 using ApiCheck.Description;
+using ApiCheck.IO;
 using ApiCheckApiListing.V2;
 using Scenarios;
 using Xunit;
 
 namespace ApiCheck.Test
 {
-    public class ReflectionApiListingReaderTests
+    public abstract class ApiListingReaderTestBase
     {
         public Assembly V1Assembly => typeof(ApiCheckApiListingV1).GetTypeInfo().Assembly;
         public Assembly V2Assembly => typeof(ApiCheckApiListingV2).GetTypeInfo().Assembly;
+
+        protected abstract IApiListingReader CreateReader(Assembly assembly, params Func<MemberInfo, bool>[] filters);
 
         [Fact]
         public void DetectsClasses()
@@ -1225,12 +1230,6 @@ namespace ApiCheck.Test
             Assert.NotNull(report);
             Assert.NotNull(report.Types);
             Assert.DoesNotContain(report.Types, type => type.Name == "Scenarios.Internal.ExcludedType");
-        }
-
-        private ReflectionApiListingReader CreateReader(Assembly assembly, params Func<MemberInfo, bool>[] filters)
-        {
-            filters = filters ?? new Func<MemberInfo, bool>[] { };
-            return new ReflectionApiListingReader(assembly, filters);
         }
     }
 }
