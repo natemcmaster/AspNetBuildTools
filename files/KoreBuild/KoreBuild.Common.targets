@@ -42,17 +42,4 @@ extending the *DependsOn property
   <Target Name="Clean"   DependsOnTargets="$(CleanDependsOn)" />
   <Target Name="Rebuild" DependsOnTargets="$(RebuildDependsOn)" />
 
-  <Target Name="GetRepoInfo" Returns="@(RepoInfo)">
-    <ItemGroup>
-      <RepoInfo Include="$(RepositoryRoot)">
-        <Version>$(Version)</Version>
-        <PackageVersion>$(PackageVersion)</PackageVersion>
-        <BuildNumber>$(BuildNumber)</BuildNumber>
-      </RepoInfo>
-    </ItemGroup>
-  </Target>
-
-  <!-- For external analysis of inputs/outputs. -->
-  <Target Name="GetArtifactInfo" DependsOnTargets="$(GetArtifactInfoDependsOn)" Returns="@(ArtifactInfo)" />
-
 </Project>

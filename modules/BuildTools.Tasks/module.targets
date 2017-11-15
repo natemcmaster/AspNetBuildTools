@@ -42,7 +42,7 @@ Generates resource files
     <MSBuild Targets="_GenerateResx"
       Projects="@(Solutions)"
       Properties="$(_ResxSlnProps)"
-      BuildInParallel="$(BuildInParallel)"
+      BuildInParallel="true"
       Condition="'@(Solutions)' != ''" />
   </Target>
 

@@ -9,6 +9,7 @@ _ReSharper.*
 *.vspx
 *.psess
 *.log
+*.ProjectImports.zip
 *.binlog
 packages
 target

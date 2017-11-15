@@ -1,0 +1,84 @@
+<Project>
+
+  <PropertyGroup>
+    <PackageDependsOn>GenerateBuildInputsCacheFile;$(PackageDependsOn)</PackageDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetRepoInfo" Returns="@(RepoInfo)">
+    <ItemGroup>
+      <RepoInfo Include="$(RepositoryRoot)">
+        <Version>$(Version)</Version>
+        <PackageVersion>$(PackageVersion)</PackageVersion>
+        <BuildNumber>$(BuildNumber)</BuildNumber>
+      </RepoInfo>
+    </ItemGroup>
+  </Target>
+
+  <!-- For analysis of inputs/outputs. -->
+  <Target Name="GetArtifactInfo" DependsOnTargets="$(GetArtifactInfoDependsOn)" Returns="@(ArtifactInfo)" />
+
+  <Target Name="GetBuildInputsFromGit">
+    <Exec Command="git ls-files --others --exclude-standard --cached"
+        WorkingDirectory="$(RepositoryRoot)"
+        ConsoleToMSBuild="true"
+        StandardOutputImportance="Low"
+        StandardErrorImportance="Low"
+        IgnoreStandardErrorWarningFormat="true"
+        IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="GitBuildInputs" />
+    </Exec>
+    <Exec Command="git ls-files --deleted"
+        WorkingDirectory="$(RepositoryRoot)"
+        ConsoleToMSBuild="true"
+        StandardOutputImportance="Low"
+        StandardErrorImportance="Low"
+        IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="GitDeletedFiles" />
+      <Output TaskParameter="ExitCode" PropertyName="GitLsExitCode" />
+    </Exec>
+    <ItemGroup>
+      <GitBuildInputs Remove="@(GitDeletedFiles)" />
+      <BuildInputs Include="$(RepositoryRoot)%(GitBuildInputs.Identity)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <GitIsAvailable Condition="$(GitLsExitCode) == 0">true</GitIsAvailable>
+      <GitIsAvailable Condition="$(GitLsExitCode) != 0">false</GitIsAvailable>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="GetBuildInputs" DependsOnTargets="GetBuildInputsFromGit;$(GetBuildInputsDependsOn)" Returns="@(BuildInputs)">
+    <ItemGroup>
+      <!-- Any files imported by KoreBuild.proj that might not be in the repo -->
+      <BuildInputs Include="$(CustomBeforeKoreBuildProps)" Condition="'$(CustomBeforeKoreBuildProps)' != '' AND Exists('$(CustomBeforeKoreBuildProps)')" />
+      <BuildInputs Include="$(CustomKoreBuildModulesPath)\*\module.props" Condition="Exists('$(CustomKoreBuildModulesPath)')" />
+      <BuildInputs Include="$(CustomKoreBuildModulesPath)\*\module.targets" Condition="Exists('$(CustomKoreBuildModulesPath)')" />
+      <BuildInputs Include="$(CustomAfterKoreBuildTargets)" Condition="'$(CustomAfterKoreBuildTargets)' != '' AND Exists('$(CustomAfterKoreBuildTargets)')" />
+    </ItemGroup>
+
+    <!-- Any repo files imported by KoreBuild.proj. Ignore this if `git ls-files` worked -->
+    <ItemGroup Condition="'$(GitIsAvailable)' != 'true'">
+      <BuildInputs Include="$(RepositoryRoot)korebuild-lock.txt" Condition="Exists('$(RepositoryRoot)korebuild-lock.txt')"/>
+      <BuildInputs Include="$(RepositoryRoot)build\repo.beforecommon.props" Condition="Exists('$(RepositoryRoot)build\repo.beforecommon.props')" />
+      <BuildInputs Include="$(RepositoryRoot)version.props" Condition="Exists('$(RepositoryRoot)version.props')" />
+      <BuildInputs Include="$(RepositoryRoot)build\repo.props" Condition="Exists('$(RepositoryRoot)build\repo.props')" />
+      <BuildInputs Include="$(RepositoryRoot)build\tasks\*.tasks" Condition="Exists('$(RepositoryRoot)build\tasks\')" />
+      <BuildInputs Include="$(RepositoryRoot)build\repo.targets" Condition="Exists('$(RepositoryRoot)build\repo.targets')" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <BuildInputsCacheFile>$(IntermediateDir)korebuild.cache</BuildInputsCacheFile>
+  </PropertyGroup>
+
+  <Target Name="GenerateBuildInputsCacheFile" DependsOnTargets="GetBuildInputs">
+    <Hash ItemsToHash="@(BuildInputs)">
+      <Output TaskParameter="HashResult" PropertyName="BuildInputsCacheHash" />
+    </Hash>
+    <ItemGroup>
+      <BuildInputs Include="$(BuildInputsCacheFile)" />
+    </ItemGroup>
+    <MakeDir Directories="$(IntermediateDir)" />
+    <WriteLinesToFile File="$(BuildInputsCacheFile)" Overwrite="true" Lines="$(BuildInputsCacheHash)" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+</Project>

@@ -10,38 +10,27 @@ FYI: targets, properties, and items that begin with an underscore are meant to b
   </ItemGroup>
 
   <PropertyGroup Condition="'$(DisableDefaultTargets)' != 'true'">
-    <PrepareDependsOn>$(PrepareDependsOn);CleanArtifacts;_PrepareOutputPaths</PrepareDependsOn>
+    <PrepareDependsOn>$(PrepareDependsOn);_PrepareOutputPaths</PrepareDependsOn>
     <RestoreDependsOn>$(RestoreDependsOn);_BeforeRestore;RestoreSolutions</RestoreDependsOn>
-    <CompileDependsOn>$(CompileDependsOn);_CreateCommitHashArtifact;BuildSolutions</CompileDependsOn>
-    <PackageDependsOn>$(PackageDependsOn);PackageProjects;PackSharedSources</PackageDependsOn>
+    <CompileDependsOn>$(CompileDependsOn);BuildSolutions</CompileDependsOn>
+    <PackageDependsOn>$(PackageDependsOn);PackageProjects</PackageDependsOn>
+
     <CleanDependsOn>$(CleanDependsOn);CleanArtifacts;CleanSolutions</CleanDependsOn>
     <RebuildDependsOn>$(RebuildDependsOn);RebuildSolutions</RebuildDependsOn>
     <GetArtifactInfoDependsOn>$(GetArtifactInfoDependsOn);GetProjectPackageInfo</GetArtifactInfoDependsOn>
+    <GetBuildInputsDependsOn>$(GetBuildInputsDependsOn);GetProjectBuildInputs</GetBuildInputsDependsOn>
   </PropertyGroup>
 
   <Target Name="CleanArtifacts">
     <RemoveDir Directories="$(BuildDir);$(IntermediateDir)" />
     <ItemGroup>
-      <_FilesToDelete Include="$(ArtifactsDir)**\*" Exclude="$(ArtifactsDir)msbuild\**\*" />
+      <_FilesToDelete Include="$(ArtifactsDir)**\*" Exclude="$(ArtifactsDir)msbuild\msbuild.rsp" />
     </ItemGroup>
     <Delete Files="@(_FilesToDelete)" />
   </Target>
 
   <Target Name="_PrepareOutputPaths">
-    <MakeDir Directories="$(ArtifactsDir);$(BuildDir)" />
-  </Target>
-
-  <!-- The filename that will contain the commit hash -->
-  <PropertyGroup>
-    <_CommitArtifactFileName>commit</_CommitArtifactFileName>
-  </PropertyGroup>
-
-  <Target Name="_CreateCommitHashArtifact" DependsOnTargets="Prepare">
-    <WriteLinesToFile
-      File="$(ArtifactsDir)$(_CommitArtifactFileName)"
-      Overwrite="true"
-      Lines="$(CommitHash)"
-      Condition="'$(CommitHash)' != ''" />
+    <MakeDir Directories="$(ArtifactsDir);$(BuildDir);$(IntermediateDir)" />
   </Target>
 
 <!--
@@ -54,14 +43,6 @@ Properties: ExcludeSolutions
 Executes /t:{Target} on all solutions
 ###################################################################
 -->
-  <PropertyGroup>
-    <_SolutionWasBuilt>false</_SolutionWasBuilt>
-    <!-- ensure its value doesn't invalidate MSBuild build cache -->
-    <_BuildPropertiesToRemove>$(_BuildPropertiesToRemove);_SolutionWasBuilt</_BuildPropertiesToRemove>
-
-    <BuildInParallel>true</BuildInParallel>
-  </PropertyGroup>
-
   <Target Name="ResolveSolutions" Returns="@(Solutions)">
     <ItemGroup>
       <_Temp Remove="@(_Temp)" />
@@ -108,22 +89,14 @@ Executes /t:{Target} on all solutions
     <MSBuild Targets="Build"
       Projects="@(Solutions)"
       Properties="$(SolutionProperties)"
-      BuildInParallel="$(BuildInParallel)"
+      BuildInParallel="true"
       RemoveProperties="$(_BuildPropertiesToRemove)" />
-
-    <PropertyGroup>
-      <_SolutionWasBuilt>true</_SolutionWasBuilt>
-    </PropertyGroup>
   </Target>
 
   <Target Name="RebuildSolutions" DependsOnTargets="ResolveSolutions;_EnsureSolutions">
     <MSBuild Targets="Rebuild"
       Projects="@(Solutions)"
       RemoveProperties="$(_BuildPropertiesToRemove)" />
-
-    <PropertyGroup>
-      <_SolutionWasBuilt>true</_SolutionWasBuilt>
-    </PropertyGroup>
   </Target>
 
 <!--
@@ -133,17 +106,16 @@ Target: PackageProjects
 Executes /t:Pack on all projects matching src/*/*.csproj.
 ###################################################################
 -->
-  <Target Name="PackageProjects" DependsOnTargets="ResolveSolutions">
-    <PropertyGroup>
-      <PackageNoBuild Condition="'$(PackageNoBuild)' == ''">$(_SolutionWasBuilt)</PackageNoBuild>
-    </PropertyGroup>
+  <Target Name="PackageProjects"
+          DependsOnTargets="GetArtifactInfo;GetBuildInputs;ResolveSolutions;_EnsureSolutions"
+          Inputs="@(BuildInputs)"
+          Outputs="@(ProjectPackageArtifactInfo)">
 
     <MSBuild Targets="Pack"
-      Projects="@(ProjectsToPack)"
-      Condition="@(ProjectsToPack->Count()) != 0"
-      Properties="$(SolutionProperties);PackageOutputPath=$(BuildDir);NoBuild=$(PackageNoBuild)"
-      BuildInParallel="$(BuildInParallel)"
-      RemoveProperties="$(_BuildPropertiesToRemove);PackageNoBuild" />
+      Projects="@(Solutions)"
+      Properties="$(SolutionProperties);PackageOutputPath=$(BuildDir);NoBuild=true"
+      BuildInParallel="true"
+      RemoveProperties="$(_BuildPropertiesToRemove)" />
   </Target>
 
   <Target Name="GetProjectPackageInfo" Returns="@(ArtifactInfo)">
@@ -155,9 +127,24 @@ Executes /t:Pack on all projects matching src/*/*.csproj.
       Projects="@(ProjectsToPack)"
       Condition="@(ProjectsToPack->Count()) != 0"
       Properties="$(SolutionProperties);RepositoryRoot=$(RepositoryRoot);PackageOutputPath=$(BuildDir);CustomAfterMicrosoftCommonTargets=$(_InspectionTargetsFile);CustomAfterMicrosoftCommonCrossTargetingTargets=$(_InspectionTargetsFile)"
-      BuildInParallel="$(BuildInParallel)"
-      RemoveProperties="$(_BuildPropertiesToRemove);PackageNoBuild">
+      BuildInParallel="true"
+      RemoveProperties="$(_BuildPropertiesToRemove)">
+      <Output TaskParameter="TargetOutputs" ItemName="ProjectPackageArtifactInfo" />
       <Output TaskParameter="TargetOutputs" ItemName="ArtifactInfo" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="GetProjectBuildInputs" Returns="@(BuildInputs)">
+    <PropertyGroup>
+      <_InspectionTargetsFile>$(MSBuildThisFileDirectory)Project.Inspection.targets</_InspectionTargetsFile>
+    </PropertyGroup>
+
+    <MSBuild Targets="GetProjectBuildInputs"
+      Projects="@(Solutions)"
+      Condition="@(Solutions->Count()) != 0"
+      Properties="$(SolutionProperties);GitIsAvailable=$(GitIsAvailable);CustomAfterMicrosoftCommonTargets=$(_InspectionTargetsFile);CustomAfterMicrosoftCommonCrossTargetingTargets=$(_InspectionTargetsFile)"
+      RemoveProperties="$(_BuildPropertiesToRemove)">
+      <Output TaskParameter="TargetOutputs" ItemName="BuildInputs" />
     </MSBuild>
   </Target>
 

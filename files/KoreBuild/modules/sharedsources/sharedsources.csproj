@@ -66,6 +66,14 @@
     </ItemGroup>
   </Target>
 
+    <!-- Collect additional files that may not be tracked by git but can affect compilation -->
+  <Target Name="GetProjectBuildInputs" Returns="@(BuildInputs)">
+    <ItemGroup Condition=" '$(GitIsAvailable)' != 'true' ">
+      <BuildInputs Include="@(Compile);@(None);@(Content);@(EmbeddedResource)" />
+      <BuildInputs Include="$(NuspecBasePath)sharedsources.props" Condition="Exists('$(NuspecBasePath)sharedsources.props')" />
+    </ItemGroup>
+  </Target>
+
   <Import Project="$(DirBuildTargetsInRepo)" Condition="Exists('$(DirBuildTargetsInRepo)')" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 </Project>

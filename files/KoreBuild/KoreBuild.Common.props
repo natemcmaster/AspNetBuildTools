@@ -1,21 +1,31 @@
 <Project>
 
+  <ItemDefinitionGroup>
+    <ArtifactInfo>
+      <ArtifactType>Unknown</ArtifactType>
+      <RepositoryRoot>$(RepositoryRoot)</RepositoryRoot>
+    </ArtifactInfo>
+  </ItemDefinitionGroup>
+
 <!--
 ###################################################################
 Standard lifecycle chain.
 ###################################################################
 -->
   <PropertyGroup>
-    <PrepareDependsOn></PrepareDependsOn>
-    <RestoreDependsOn>Prepare</RestoreDependsOn>
-    <CompileDependsOn>Restore</CompileDependsOn>
-    <PackageDependsOn>Compile</PackageDependsOn>
-    <TestDependsOn>Package</TestDependsOn>
-    <VerifyDependsOn>Test</VerifyDependsOn>
-    <BuildDependsOn>Verify</BuildDependsOn>
+    <RestoreDependsOn></RestoreDependsOn>
+    <CompileDependsOn></CompileDependsOn>
+    <PackageDependsOn></PackageDependsOn>
+    <TestDependsOn></TestDependsOn>
+    <VerifyDependsOn></VerifyDependsOn>
+    <BuildDependsOn>Restore;Compile;Package;Test;Verify</BuildDependsOn>
+  </PropertyGroup>
 
+  <PropertyGroup>
+    <PrepareDependsOn></PrepareDependsOn>
     <CleanDependsOn></CleanDependsOn>
     <RebuildDependsOn></RebuildDependsOn>
+    <GetBuildInputsDependsOn></GetBuildInputsDependsOn>
   </PropertyGroup>
 
 <!--

@@ -21,6 +21,7 @@
 
   <!-- targets -->
   <Import Project="KoreBuild.Common.targets" />
+  <Import Project="KoreBuild.Incremental.targets" />
   <Import Project="modules\*\module.targets" />
   <Import Project="$(CustomKoreBuildModulesPath)\*\module.targets" Condition="Exists('$(CustomKoreBuildModulesPath)')" />
   <Import Project="$(RepositoryRoot)build\repo.targets" Condition="Exists('$(RepositoryRoot)build\repo.targets')" />

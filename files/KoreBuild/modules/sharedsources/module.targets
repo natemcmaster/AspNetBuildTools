@@ -9,10 +9,15 @@ that matches "$(RepositoryRoot)/shared/*.Sources".
 <Project>
   <PropertyGroup>
     <PackageDependsOn>$(PackageDependsOn);PackSharedSources</PackageDependsOn>
-    <GetArtifactInfoDependsOn>$(GetArtifactInfoDependsOn);ResolveSharedSourcesPackageInfo</GetArtifactInfoDependsOn>
+    <GetArtifactInfoDependsOn>$(GetArtifactInfoDependsOn);GetSharedSourcesPackageInfo</GetArtifactInfoDependsOn>
+    <GetBuildInputsDependsOn>$(GetBuildInputsDependsOn);GetSharedSourcesPackageBuildInputs</GetBuildInputsDependsOn>
   </PropertyGroup>
 
-  <Target Name="PackSharedSources" DependsOnTargets="_SetSharedSourcesProperties">
+  <Target Name="PackSharedSources"
+          DependsOnTargets="GetSharedSourcesPackageBuildInputs;GetSharedSourcesPackageInfo;_SetSharedSourcesProperties"
+          Inputs="@(SharedSourcesBuildInputs)"
+          Outputs="@(SharedSourcesArtifactInfo)">
+
     <MSBuild Targets="Restore;Pack"
       Projects="$(MSBuildThisFileDirectory)sharedsources.csproj"
       Properties="$(_SharedSourcesPackageProperties);NuspecBasePath=$([MSBuild]::NormalizeDirectory('%(SharedSourceDirectories.Identity)'));PackageId=%(FileName)%(Extension);"
@@ -20,13 +25,14 @@ that matches "$(RepositoryRoot)/shared/*.Sources".
       BuildInParallel="true" />
   </Target>
 
-  <Target Name="ResolveSharedSourcesPackageInfo" DependsOnTargets="_SetSharedSourcesProperties" Returns="@(ArtifactInfo)">
+  <Target Name="GetSharedSourcesPackageInfo" DependsOnTargets="_SetSharedSourcesProperties" Returns="@(ArtifactInfo)">
     <MSBuild Targets="GetArtifactInfo"
       Projects="$(MSBuildThisFileDirectory)sharedsources.csproj"
       Properties="$(_SharedSourcesPackageProperties);NuspecBasePath=$([MSBuild]::NormalizeDirectory('%(SharedSourceDirectories.Identity)'));PackageId=%(FileName)%(Extension);"
       Condition="@(SharedSourceDirectories->Count()) != 0"
       BuildInParallel="true">
       <Output TaskParameter="TargetOutputs" ItemName="ArtifactInfo" />
+      <Output TaskParameter="TargetOutputs" ItemName="SharedSourcesArtifactInfo" />
     </MSBuild>
   </Target>
 
@@ -34,6 +40,17 @@ that matches "$(RepositoryRoot)/shared/*.Sources".
     <PropertyGroup>
       <_SharedSourcesPackageProperties>PackageOutputPath=$(BuildDir);RepositoryRoot=$(RepositoryRoot);BuildNumber=$(BuildNumber);</_SharedSourcesPackageProperties>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="GetSharedSourcesPackageBuildInputs" Condition="'$(GitIsAvailable)' != 'true'" Returns="@(BuildInputs)">
+    <MSBuild Targets="GetProjectBuildInputs"
+      Projects="$(MSBuildThisFileDirectory)sharedsources.csproj"
+      Properties="$(_SharedSourcesPackageProperties);NuspecBasePath=$([MSBuild]::NormalizeDirectory('%(SharedSourceDirectories.Identity)'));PackageId=%(FileName)%(Extension);"
+      Condition="@(SharedSourceDirectories->Count()) != 0"
+      BuildInParallel="true">
+      <Output TaskParameter="TargetOutputs" ItemName="SharedSourcesBuildInputs" />
+      <Output TaskParameter="TargetOutputs" ItemName="BuildInputs" />
+    </MSBuild>
   </Target>
 
 </Project>

@@ -5,6 +5,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
     <DefineConstants>$(DefineConstants);SDK</DefineConstants>
+    <PackageId>Internal.AspNetCore.Sdk</PackageId>
     <Serviceable>false</Serviceable>
     <Description>Build targets and extensions to Microsoft.NET.Sdk. This package is intended for Microsoft use only.</Description>
     <RootNamespace>Microsoft.AspNetCore.BuildTools</RootNamespace>
@@ -45,6 +46,7 @@
     <PropertyGroup>
       <NuspecProperties>$(NuspecProperties);apicheckVersion=$(ApiCheckPackageVersion)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);config=$(Configuration)</NuspecProperties>
+      <NuspecProperties>$(NuspecProperties);id=$(PackageId)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);version=$(PackageVersion)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);description=$(Description)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);copyright=$(Copyright)</NuspecProperties>

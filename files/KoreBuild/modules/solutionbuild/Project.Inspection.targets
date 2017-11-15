@@ -25,4 +25,29 @@
     </ItemGroup>
   </Target>
 
+  <!-- Collect additional files that may not be tracked by git but can affect compilation -->
+  <Target Name="GetProjectBuildInputs" Returns="@(BuildInputs)">
+    <ItemGroup>
+      <BuildInputs Include="$(MSBuildAllProjects)" />
+      <BuildInputs Include="$(ProjectAssetsFile)" />
+    </ItemGroup>
+
+    <!-- If `git ls-files` is not available, approximate it with known MSBuild files -->
+    <ItemGroup Condition=" '$(GitIsAvailable)' != 'true' ">
+      <BuildInputs Include="@(Compile);@(None);@(Content);@(EmbeddedResource)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_TargetFramework Include="$(TargetFrameworks)" Condition="'$(TargetFrameworks)' != ''" />
+    </ItemGroup>
+
+    <MSBuild
+      Targets="GetProjectBuildInputs"
+      Projects="$(MSBuildProjectFullPath)"
+      Properties="TargetFramework=%(_TargetFramework.Identity)"
+      Condition="'$(TargetFrameworks)' != '' AND '$(TargetFramework)' == ''">
+      <Output TaskParameter="TargetOutputs" ItemName="BuildInputs" />
+    </MSBuild>
+  </Target>
+
 </Project>
