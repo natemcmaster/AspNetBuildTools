@@ -31,6 +31,9 @@ namespace KoreBuild.FunctionalTests
         public async Task FullBuildCompletes()
         {
             var app = _fixture.CreateTestApp("SimpleRepo");
+            var libPackage = Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Lib.1.0.0-beta-0001.nupkg");
+            var libSymbolsPackage = Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Lib.1.0.0-beta-0001.symbols.nupkg");
+            var sourcesPackage = Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Sources.1.0.0-beta-0001.nupkg");
 
             var build = app.ExecuteBuild(_output, "/p:BuildNumber=0001");
             var task = await Task.WhenAny(build, Task.Delay(TimeSpan.FromMinutes(5)));
@@ -42,16 +45,19 @@ namespace KoreBuild.FunctionalTests
             Assert.True(File.Exists(Path.Combine(app.WorkingDirectory, "korebuild-lock.txt")), "Should have created the korebuild lock file");
 
             // /t:Package
-            var libPackage = Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Lib.1.0.0-beta-0001.nupkg");
-            var libSymbolsPackage = Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Lib.1.0.0-beta-0001.symbols.nupkg");
             Assert.True(File.Exists(Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.CliTool.1.0.0-beta-0001.nupkg")), "Build should have produced a lib nupkg");
             Assert.True(File.Exists(libPackage), "Build should have produced a lib nupkg");
             Assert.True(File.Exists(libSymbolsPackage), "Build should have produced a symbols lib nupkg");
-            Assert.True(File.Exists(Path.Combine(app.WorkingDirectory, "artifacts", "build", "Simple.Sources.1.0.0-beta-0001.nupkg")), "Build should have produced a sources nupkg");
+            Assert.True(File.Exists(sourcesPackage), "Build should have produced a sources nupkg");
+
+            using (var reader = new PackageArchiveReader(sourcesPackage))
+            {
+                Assert.Single(reader.GetFiles(), p => string.Equals(p, "build/Simple.Sources.props", StringComparison.OrdinalIgnoreCase));
+            }
 
             using (var reader = new PackageArchiveReader(libPackage))
             {
-                Assert.Empty(reader.GetFiles().Where(p => Path.GetExtension(p).Equals(".pdb", StringComparison.OrdinalIgnoreCase)));
+                Assert.Empty(reader.GetFiles().Where(p => string.Equals(Path.GetExtension(p), ".pdb", StringComparison.OrdinalIgnoreCase)));
             }
 
             // /t:TestNuGetPush

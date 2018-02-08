@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Short-term fix to disable SourceLink on projects that reference .Sources packages. -->
+    <GenerateSourceLinkFile>false</GenerateSourceLinkFile>
+  </PropertyGroup>
+</Project>

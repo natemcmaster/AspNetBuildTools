@@ -48,6 +48,7 @@
       <Pack>true</Pack>
       <PackagePath>$(ContentTargetFolders)\any\any\</PackagePath>
     </EmbeddedResource>
+    <Content Include="$(MSBuildThisFileDirectory)sharedsources.props" PackagePath="build\$(PackageId).props" />
   </ItemGroup>
 
   <ItemGroup>
