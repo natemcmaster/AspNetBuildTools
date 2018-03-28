@@ -11,6 +11,8 @@
       <TestAssembly Include="@(TargetPathWithTargetPlatformMoniker)">
         <TargetFramework>$(TargetFramework)</TargetFramework>
         <TestGroupName>$(TestGroupName)</TestGroupName>
+        <ProjectDepsFilePath>$(ProjectDepsFilePath)</ProjectDepsFilePath>
+        <ProjectRuntimeConfigFilePath>$(ProjectRuntimeConfigFilePath)</ProjectRuntimeConfigFilePath>
       </TestAssembly>
     </ItemGroup>
 

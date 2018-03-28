@@ -33,9 +33,13 @@ namespace KoreBuild.FunctionalTests
             var app = _fixture.CreateTestApp("SimpleRepo");
 
             var build = app.ExecuteBuild(_output, "/p:BuildNumber=0001");
-            var task = await Task.WhenAny(build, Task.Delay(TimeSpan.FromMinutes(5)));
+            var timeout = TimeSpan.FromMinutes(5);
+            var task = await Task.WhenAny(build, Task.Delay(timeout));
 
-            Assert.Same(task, build);
+            if (!ReferenceEquals(task, build))
+            {
+                throw new TimeoutException($"The build timed out after {timeout.TotalMinutes} minutes");
+            }
             Assert.Equal(0, build.Result);
 
             // bootstrapper

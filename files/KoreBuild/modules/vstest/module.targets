@@ -51,7 +51,15 @@ Runs the VSTest on all projects in the ProjectsToTest itemgroup.
 
     <ItemGroup>
       <TestGroups Include="$(MSBuildProjectFullPath)" Condition="'%(TestAssembly.TestGroupName)' != ''">
-        <AdditionalProperties>Assemblies=@(TestAssembly);TestGroupName=%(TestAssembly.TestGroupName);TargetFramework=%(TestAssembly.TargetFramework);TargetFrameworkIdentifier=%(TestAssembly.TargetFrameworkIdentifier);TargetFrameworkVersion=%(TestAssembly.TargetFrameworkVersion)</AdditionalProperties>
+        <AdditionalProperties>
+          Assemblies=@(TestAssembly);
+          TestGroupName=%(TestAssembly.TestGroupName);
+          TargetFramework=%(TestAssembly.TargetFramework);
+          TargetFrameworkIdentifier=%(TestAssembly.TargetFrameworkIdentifier);
+          TargetFrameworkVersion=%(TestAssembly.TargetFrameworkVersion);
+          DepsFilePath=%(TestAssembly.ProjectDepsFilePath);
+          RuntimeConfigFilePath=%(TestAssembly.ProjectRuntimeConfigFilePath)
+        </AdditionalProperties>
       </TestGroups>
     </ItemGroup>
 
@@ -65,6 +73,8 @@ Runs the VSTest on all projects in the ProjectsToTest itemgroup.
   <!-- The 'inner-build' -->
   <PropertyGroup>
     <TrxFile>$(LogOutputDir)$(TestGroupName)-$(TargetFramework)-$(BuildNumber).trx</TrxFile>
+    <XunitXmlFile>$(LogOutputDir)$(TestGroupName)-$(TargetFramework)-$(BuildNumber).xml</XunitXmlFile>
+    <XunitTestLogger>-xml;$(XunitXmlFile)</XunitTestLogger>
     <VSTestLogger Condition=" '$(VSTestLogger)' == '' AND '$(TEAMCITY_VERSION)' != '' ">trx;LogFileName=$(TrxFile)</VSTestLogger>
     <VSTestDiagFile Condition=" '$(VSTestVerboseOutput)' == 'true'">$(LogOutputDir)$(TestGroupName)-$(TargetFramework)-$(BuildNumber).diag</VSTestDiagFile>
     <!--
@@ -81,29 +91,31 @@ Runs the VSTest on all projects in the ProjectsToTest itemgroup.
 
     <PropertyGroup>
       <TestAdapterPath>%(TestAssemblies.RootDir)%(TestAssemblies.Directory)</TestAdapterPath>
+      <TestRunnerPath>$(HOME)/Downloads/xunit.runner.console.2.4.0-beta.2.build3981/tools/</TestRunnerPath>
+      <TestRunnerPath Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' ">$(TestRunnerPath)net452/xunit.console.exe</TestRunnerPath>
+      <TestRunnerPath Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">$(TestRunnerPath)netcoreapp2.0/xunit.console.dll</TestRunnerPath>
     </PropertyGroup>
 
     <ItemGroup>
-      <VSTestArgs Remove="@(VSTestArgs)" />
-      <VSTestArgs Include="vstest" />
-      <VSTestArgs Include="--Parallel" />
-      <VSTestArgs Include="--Blame" Condition="'$(VSTestBlame)' == 'true'" />
-      <VSTestArgs Include="--Diag:$([MSBuild]::Escape($(VSTestDiagFile)))" Condition="'$(VSTestDiagFile)' != ''" />
-      <VSTestArgs Include="--Framework:$(TargetFrameworkIdentifier),Version=v$(TargetFrameworkVersion)" />
-      <VSTestArgs Include="--Logger:$([MSBuild]::Escape($(VSTestLogger)))" Condition="'$(VSTestLogger)' != ''" />
-      <VSTestArgs Include="--TestAdapterPath:$(TestAdapterPath)" Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' " />
-      <VSTestArgs Include="@(TestAssemblies)" />
-      <VSTestArgs Include="--;RunConfiguration.NoAutoReporters=true" Condition="'$(VSTestAutoReporters)' != 'true'" />
+      <XunitTestArgs Remove="@(XunitTestArgs)" />
+      <XunitTestArgs Include="exec" />
+      <XunitTestArgs Include="--runtimeconfig;$(RuntimeConfigFilePath)" Condition="'$(RuntimeConfigFilePath)' != ''" />
+      <XunitTestArgs Include="--depsfile;$(DepsFilePath)" Condition="'$(DepsFilePath)' != ''" />
+      <XunitTestArgs Include="$(TestRunnerPath)" />
+      <XunitTestArgs Include="@(TestAssemblies)" />
+      <XunitTestArgs Include="-parallel;all" />
+      <XunitTestArgs Include="-noautoreporters" Condition="'$(VSTestAutoReporters)' != 'true'" />
+      <XunitTestArgs Include="$(XunitTestLogger)" Condition="'$(XunitTestLogger)' != ''" />
     </ItemGroup>
 
     <Message Text="%0AStarting test group: $(TestGroupName)/$(TargetFramework)" Importance="High" />
 
-    <RunDotNet Arguments="@(VSTestArgs)" IgnoreExitCode="true">
-      <Output TaskParameter="ExitCode" PropertyName="VsTestExitCode" />
+    <RunDotNet Arguments="@(XunitTestArgs)" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="XunitTestExitCode" />
     </RunDotNet>
 
-    <ConsoleMessage Text="##teamcity[importData type='vstest' path='$(TrxFile)']" Condition="'$(TEAMCITY_VERSION)' != '' AND Exists($(TrxFile))" />
-    <Error Text="Test group $(TestGroupName)/$(TargetFramework) failed with exit code '$(VsTestExitCode)'." Condition=" $(VsTestExitCode) != 0 " />
+    <ConsoleMessage Text="##teamcity[importData type='xunit' path='$(XunitXmlFile)']" Condition="'$(TEAMCITY_VERSION)' != '' AND Exists($(XunitXmlFile))" />
+    <Error Text="Test group $(TestGroupName)/$(TargetFramework) failed with exit code '$(XunitTestExitCode)'." Condition=" $(XunitTestExitCode) != 0 " />
   </Target>
 
   <Target Name="ValidateBenchmarks" DependsOnTargets="ResolveSolutions" Condition=" '$(EnableBenchmarkValidation)' == 'true' ">

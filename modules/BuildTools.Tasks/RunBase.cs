@@ -131,6 +131,8 @@ namespace Microsoft.AspNetCore.BuildTools
                 },
             };
 
+            Log.LogCommandLine($"{process.StartInfo.FileName} {process.StartInfo.Arguments}");
+
             foreach (var var in GetEnvVars(EnvironmentVariables))
             {
                 process.StartInfo.Environment[var.Key] = var.Value;
