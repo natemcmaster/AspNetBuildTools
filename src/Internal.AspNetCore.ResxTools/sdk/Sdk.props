@@ -1,0 +1,15 @@
+<Project>
+  <ItemDefinitionGroup>
+    <EmbeddedResource>
+      <!-- This tells Visual Studio to run the _AspNetCoreGenerateCodeForResx target -->
+      <Generator Condition="'$(DisableResxGenerationOnBuild)' != 'true'">MSBuild:_AspNetCoreGenerateCodeForResx</Generator>
+    </EmbeddedResource>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <_ResxToolsAssembly>$(MSBuildThisFileDirectory)..\tasks\netstandard2.0\Internal.AspNetCore.ResxTools.dll</_ResxToolsAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="Internal.AspNetCore.ResxTools.GenerateResxSource" AssemblyFile="$(_ResxToolsAssembly)" />
+
+</Project>

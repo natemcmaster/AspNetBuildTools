@@ -1,0 +1,37 @@
+<Project>
+
+  <!-- A useful target if you want to run code generation on demand, not automatically on build. -->
+  <Target Name="Resx" DependsOnTargets="AspNetCoreGenerateCodeForResx" />
+
+  <PropertyGroup>
+    <AspNetCoreResxGenerationBeforeTargets Condition="'$(DisableResxGenerationOnBuild)' != 'true'">CoreCompile</AspNetCoreResxGenerationBeforeTargets>
+  </PropertyGroup>
+
+  <Target Name="_AspNetCoreGenerateCodeForResx"
+          BeforeTargets="$(AspNetCoreResxGenerationBeforeTargets)"
+          DependsOnTargets="_ResolveResxToBeGenerated;_CoreGenerateCodeForResx" />
+
+  <Target Name="_ResolveResxToBeGenerated" DependsOnTargets="PrepareResourceNames">
+    <ItemGroup>
+      <_GenerateCodeForResx Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.Extension)' == '.resx' AND '%(EmbeddedResource.GenerateSource)' != 'false'">
+        <GeneratedFileName Condition="'$(DisableResxGenerationOnBuild)' == 'true'">Properties\%(EmbeddedResource.FileName).Designer$(DefaultLanguageSourceExtension)</GeneratedFileName>
+        <GeneratedFileName Condition="'$(DisableResxGenerationOnBuild)' != 'true'">$(IntermediateOutputPath)%(EmbeddedResource.ManifestResourceName).g$(DefaultLanguageSourceExtension)</GeneratedFileName>
+      </_GenerateCodeForResx>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CoreGenerateCodeForResx"
+          Inputs="@(_GenerateCodeForResx)"
+          Outputs="@(_GenerateCodeForResx->'%(GeneratedFileName)')">
+
+    <Error Text="Only C# is currently supported by Internal.AspNetCore.ResxTools" Condition="'$(Language)' != 'C#'" />
+
+    <Internal.AspNetCore.ResxTools.GenerateResxSource ResourceFiles="@(_GenerateCodeForResx)" />
+
+    <ItemGroup>
+      <FileWrites Include="%(_GenerateCodeForResx.GeneratedFileName)" />
+      <Compile Include="%(_GenerateCodeForResx.GeneratedFileName)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

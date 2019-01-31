@@ -12,11 +12,4 @@ for use outside of Microsoft.
     Project="DotNetTool.targets"
     Condition="'$(PackAsTool)' == 'true' AND '$(TargetFramework)' != ''" />
 
-  <Target Name="Resx"
-          DependsOnTargets="PrepareResourceNames;_CoreGenerateCSharpForResources" />
-
-  <Target Name="_ResolveEmbeddedResources"
-          DependsOnTargets="PrepareResourceNames"
-          Returns="@(EmbeddedResource)" />
-
 </Project>

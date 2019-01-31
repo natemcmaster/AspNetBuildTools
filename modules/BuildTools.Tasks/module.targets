@@ -44,22 +44,14 @@ Targets: Resx
 Generates resource files
 ###################################################################
 -->
-  <Target Name="Resx" DependsOnTargets="ResolveSolutions">
-    <Warning Text="No solutions found to build in '$(RepositoryRoot)'" Condition="'@(Solutions)' == ''" />
-
-    <PropertyGroup>
-      <_ResxTargets>$(MSBuildThisFileDirectory)Project.CSharp.Resx.targets</_ResxTargets>
-      <_ResxSlnProps>$(BuildProperties)</_ResxSlnProps>
-      <!-- See comments in Project.CSharp.Resx.targets for what this does-->
-      <_ResxSlnProps>$(_ResxSlnProps);CustomAfterMicrosoftCommonTargets=$(_ResxTargets)</_ResxSlnProps>
-      <_ResxSlnProps>$(_ResxSlnProps);CustomAfterMicrosoftCommonCrossTargetingTargets=$(_ResxTargets)</_ResxSlnProps>
-    </PropertyGroup>
-
-    <MSBuild Targets="_GenerateResx"
-      Projects="@(Solutions)"
-      Properties="$(_ResxSlnProps)"
-      BuildInParallel="$(BuildInParallel)"
-      Condition="'@(Solutions)' != ''" />
+  <Target Name="Resx" DependsOnTargets="ResolveSolutions;ResolveProjects">
+    <MSBuild
+      Targets="Resx"
+      Projects="@(Solutions);@(ProjectToBuild)"
+      SkipNonexistentProjects="true"
+      SkipNonexistentTargets="true"
+      BuildInParallel="true"
+      Condition="'@(Solutions)' != '' OR '@(ProjectToBuild)' != ''" />
   </Target>
 
 <!--

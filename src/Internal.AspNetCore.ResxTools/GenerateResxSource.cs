@@ -10,20 +10,14 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.AspNetCore.BuildTools
+namespace Internal.AspNetCore.ResxTools
 {
     /// <summary>
     /// Generates C# for resx files. It is expected to run on all EmbeddedResource items named *.resx and after
     /// the 'PrepareResourceNames' target.
     /// <seealso cref="Microsoft.Build.Tasks.CreateManifestResourceName"/>.
     /// </summary>
-#if SDK
-    public class Sdk_GenerateResxDesignerFiles : Task
-#elif BuildTools
-    public class GenerateResxDesignerFiles : Task
-#else
-#error This must be built either for an SDK or for BuildTools
-#endif
+    public class GenerateResxSource : Task
     {
         /// <summary>
         /// Expected metadata items on <see cref="ResourceFiles"/>.

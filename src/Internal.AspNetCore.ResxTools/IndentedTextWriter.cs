@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Microsoft.AspNetCore.BuildTools.Utilities
+namespace Internal.AspNetCore.ResxTools
 {
     internal class IndentedTextWriter : TextWriter
     {
